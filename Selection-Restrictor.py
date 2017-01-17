@@ -56,10 +56,13 @@ def prop_update(self,context):
     update()
 
 def is_emissive(obj):
-    for mat in obj.data.materials:
-        for n in mat.node_tree.nodes:
-            if n.type == "EMISSION":
-                return True
+    try:
+        for mat in obj.data.materials:
+            for n in mat.node_tree.nodes:
+                if n.type == "EMISSION":
+                    return True
+    except:
+        return False
 
 def update():
     global sel_restrictor
