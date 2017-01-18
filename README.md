@@ -1,13 +1,10 @@
 # Selection-Restrictor
-Blender - This addon helps to restrict the selection of objects by type
+This Blender add-on helps to restrict the selection of objects by type
 
 Selection-Restrictor (Alesis) and Selectivity (Nikos) have merged into a single project.
 
 Download (right-click - Save As) : https://raw.githubusercontent.com/Nikos-Prinios/Selection-Restrictor/master/Selection-Restrictor.py
 
-###Contact :
-Alesis : sidenkoai@gmail.com  
-Nikos : nikos@easy-logging.net
 
 ![Viewport panel](/images/panel.jpg)
 
@@ -25,3 +22,7 @@ By default, objects whose types are not displayed are still selectable. You can 
 
 #### Lights
 If some emissive objects are part of your lighting setup, you can count them as light. If only some of them are lights while the others are just objects, you can filter them by adding a prefix to their name (i.e. : light_)
+
+###Contact :
+Alesis : sidenkoai@gmail.com  
+Nikos : nikos@easy-logging.net
