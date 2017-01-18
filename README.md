@@ -30,5 +30,4 @@ If some emissive objects are part of your lighting setup, you can count them as 
 ###Contact :
 Alesis : sidenkoai@gmail.com  
 Nikos : nikos@easy-logging.net
----
-**[Download](https://raw.githubusercontent.com/Nikos-Prinios/Selection-Restrictor/master/Selection-Restrictor.py)** (right-click - Save As)
+
