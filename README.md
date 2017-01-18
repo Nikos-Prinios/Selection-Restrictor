@@ -3,7 +3,7 @@ This Blender add-on helps to restrict the selection of objects by type
 
 Selection-Restrictor (Alesis) and Selectivity (Nikos) have merged into a single project.
 
-(DOWNLOAD LINK)[https://raw.githubusercontent.com/Nikos-Prinios/Selection-Restrictor/master/Selection-Restrictor.py] (right-click - Save As)
+[DOWNLOAD LINK](https://raw.githubusercontent.com/Nikos-Prinios/Selection-Restrictor/master/Selection-Restrictor.py) (right-click - Save As)
 
 
 ![Viewport panel](/images/panel.jpg)
