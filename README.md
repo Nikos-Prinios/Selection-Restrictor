@@ -3,12 +3,15 @@
 
 Selection-Restrictor (Alesis) and Selectivity (Nikos) have merged into a single project.
 
+---
+
 **[Download](https://raw.githubusercontent.com/Nikos-Prinios/Selection-Restrictor/master/Selection-Restrictor.py)** (right-click - Save As)
 
+---
+### Usage
 
 ![Viewport panel](/images/panel.jpg)
 
-### Usage
 You can activate the selection restrictor from the 3D viewport.
 
 ![Activate](/images/restrictor.jpg)
@@ -23,8 +26,9 @@ By default, objects whose types are not displayed are still selectable. You can 
 #### Lights
 If some emissive objects are part of your lighting setup, you can count them as light. If only some of them are lights while the others are just objects, you can filter them by adding a prefix to their name (i.e. : light_)
 
+---
 ###Contact :
 Alesis : sidenkoai@gmail.com  
 Nikos : nikos@easy-logging.net
-
+---
 **[Download](https://raw.githubusercontent.com/Nikos-Prinios/Selection-Restrictor/master/Selection-Restrictor.py)** (right-click - Save As)
