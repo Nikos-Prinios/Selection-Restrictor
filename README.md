@@ -1,13 +1,13 @@
 # Selection-Restrictor
-**This Blender add-on helps to restrict the selection of objects by type**
-![Viewport panel](/images/panel.jpg)
+**This Blender add-on helps to restrict the selection of objects by type**  
+![Viewport panel](/images/panel.jpg)  
 Selection-Restrictor (Alesis) and Selectivity (Nikos) have merged into a single project.
 
 ---
 
-**[Download](https://raw.githubusercontent.com/Nikos-Prinios/Selection-Restrictor/master/Selection-Restrictor.py)** (right-click - Save As)
+**[Download](https://raw.githubusercontent.com/Nikos-Prinios/Selection-Restrictor/master/Selection-Restrictor.py)** (right-click - Save As)  
 
----
+
 ### Usage
 
 You can activate the selection restrictor from the 3D viewport.
