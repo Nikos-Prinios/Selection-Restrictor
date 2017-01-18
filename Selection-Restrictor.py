@@ -190,7 +190,7 @@ class selective_panel(Header):
         if not sel_restrictor :
             row = layout.row()
             row.separator()
-            row.operator("objects.activate", icon='UNPINNED', text='Selectivity')
+            row.operator("objects.activate", icon='UNPINNED', text='Selection Restrictor')
             row.active = False
         else :
             row = layout.row(align=True)
