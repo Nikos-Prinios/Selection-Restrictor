@@ -19,7 +19,7 @@
 bl_info = {
 	"name": "Selection-Restrictor",
 	"author": "Alesis & Nikos",
-	"version": (0,0,1,0),
+	"version": (1,5),
 	"blender": (2, 7, 8, 0),
 	"api": 44539,
 	"category": "3D View",
@@ -37,10 +37,10 @@ from bpy.types import Operator, AddonPreferences
 from bpy.props import BoolProperty, StringProperty
 from bpy.app.handlers import persistent
 global sel_restrictor
-global obj_num
+global obj_num, selected_objects
 
 obj_num = 1
-
+restrict_to_selection = False
 
 @persistent
 def need_update(dummy):
@@ -63,6 +63,23 @@ def is_emissive(obj):
                     return True
     except:
         return False
+
+def initial_selection_read():
+    global selected_objects
+    selected_objects = []
+    for obj in bpy.context.scene.objects:
+        if obj.select:
+            selected_objects.append(obj)
+
+def initial_selection_write():
+    global selected_objects
+    for obj in bpy.context.scene.objects:
+        if obj in selected_objects:
+            print(obj.name)
+            obj.hide_select = False
+        else:
+            obj.hide_select = True
+
 
 def update():
     global sel_restrictor
@@ -135,23 +152,44 @@ def update():
             if obj.type == 'META' and not metaball_button:
                 obj.hide_select = hidden_selectable
 
+        
+        if context.scene.restrict_to_selected_objects:
+            initial_selection_read()
+            for obj in context.scene.objects:
+                if not obj.select:
+                    obj.hide_select = True
+                else:
+                    obj.hide_select = False
+
         for obj in bpy.context.scene.objects:        
                 if obj.select and obj.hide_select :
                     obj.select = False
-                
-S = bpy.types.Scene        
-S.meshes = bpy.props.BoolProperty(name="Meshes", default = False, update = prop_update)
-S.nurbs = bpy.props.BoolProperty(name="Nurbs", default = False, update = prop_update)
-S.cameras = bpy.props.BoolProperty(name="Cameras", default = False, update = prop_update)
-S.lights = bpy.props.BoolProperty(name="Lights", default = False, update = prop_update)
-S.empties = bpy.props.BoolProperty(name="Empties", default = False,update = prop_update)
-S.bones = bpy.props.BoolProperty(name="Bones", default = False, update = prop_update)
-S.surfaces = bpy.props.BoolProperty(name="surfaces", default = False, update = prop_update)
-S.texts = bpy.props.BoolProperty(name="texts", default = False, update = prop_update)
-S.lattices = bpy.props.BoolProperty(name="lattices", default = False, update = prop_update)
-S.fields = bpy.props.BoolProperty(name="fields", default = False, update = prop_update)
-S.metaballs = bpy.props.BoolProperty(name="metaballs", default = False, update = prop_update)
+ 
+def restrict_to_selection(self,context):
+    if context.scene.restrict_to_selected_objects:
+        initial_selection_read()
+        for obj in context.scene.objects:
+            if not obj.select:
+                obj.hide_select = True
+            else:
+                obj.hide_select = False
+    else:
+        update()
 
+
+S = bpy.types.Scene        
+S.meshes = bpy.props.BoolProperty(name="Meshes", default = True, update = prop_update)
+S.nurbs = bpy.props.BoolProperty(name="Nurbs", default = True, update = prop_update)
+S.cameras = bpy.props.BoolProperty(name="Cameras", default = True, update = prop_update)
+S.lights = bpy.props.BoolProperty(name="Lights", default = True, update = prop_update)
+S.empties = bpy.props.BoolProperty(name="Empties", default = True,update = prop_update)
+S.bones = bpy.props.BoolProperty(name="Bones", default = True, update = prop_update)
+S.surfaces = bpy.props.BoolProperty(name="surfaces", default = True, update = prop_update)
+S.texts = bpy.props.BoolProperty(name="texts", default = True, update = prop_update)
+S.lattices = bpy.props.BoolProperty(name="lattices", default = True, update = prop_update)
+S.fields = bpy.props.BoolProperty(name="fields", default = True, update = prop_update)
+S.metaballs = bpy.props.BoolProperty(name="metaballs", default = True, update = prop_update)
+S.restrict_to_selected_objects = bpy.props.BoolProperty(name="restrict_to_selected_objects", default = False, update = restrict_to_selection)
 bpy.types.Object.init = bpy.props.BoolProperty(name="init",description="Initial state",default = False)
 
 sel_restrictor = False
@@ -164,6 +202,7 @@ def initial_write():
     for obj in bpy.context.scene.objects:
         obj.hide_select = obj.init
 
+
 class selective_panel(Header):
     bl_space_type = 'VIEW_3D'
     bl_label = "Selective"
@@ -171,9 +210,13 @@ class selective_panel(Header):
     bl_region_type = 'HEADER'
     bl_context = "scene"
 
+    @classmethod
+    def poll(self, context):
+        return True
+
     def draw(self, context):
         layout = self.layout
-        global sel_restrictor, empties,lights,bones,cameras,meshes,nurbs
+        global sel_restrictor, empties, lights, bones, cameras, meshes, nurbs
 
         mesh_button = bpy.context.user_preferences.addons[__name__].preferences.mesh_button
         light_button = bpy.context.user_preferences.addons[__name__].preferences.light_button
@@ -190,26 +233,31 @@ class selective_panel(Header):
         if not sel_restrictor :
             row = layout.row()
             row.separator()
-            row.operator("objects.activate", icon='UNPINNED', text='Selection Restrictor')
-            row.active = False
+            row.operator("objects.activate", icon='TRIA_RIGHT', text='Selection Restrictor')
         else :
             row = layout.row(align=True)
             row.separator()
-            row.operator("objects.activate", icon='PINNED', text='') 
-             
-            row = layout.row(align=True)
-            row.active = True
+            row.operator("objects.activate", icon='TRIA_DOWN', text='')
             if mesh_button : row.prop(bpy.context.scene,"meshes", "", icon='MESH_DATA')
-            if light_button : row.prop(bpy.context.scene,"lights", "", icon='LAMP')
+            if light_button : row.prop(bpy.context.scene,"lights", "", icon='LAMP_DATA')
             if camera_button : row.prop(bpy.context.scene,"cameras", "", icon='OUTLINER_DATA_CAMERA')
-            if empty_button : row.prop(bpy.context.scene,"empties", "", icon='OUTLINER_OB_EMPTY')
+            if empty_button : row.prop(bpy.context.scene,"empties", "", icon='OUTLINER_DATA_EMPTY')
             if curve_button : row.prop(bpy.context.scene,"nurbs", "", icon='CURVE_DATA')
-            if armature_button : row.prop(bpy.context.scene,"bones", "", icon='BONE_DATA')
+            if armature_button : row.prop(bpy.context.scene,"bones", "", icon='ARMATURE_DATA')
             if surface_button : row.prop(bpy.context.scene, "surfaces", "", icon="SURFACE_DATA")
             if text_button : row.prop(bpy.context.scene, "texts", "",icon="FONT_DATA")
-            if lattice_button : row.prop(bpy.context.scene, "lattices", "", icon="OUTLINER_OB_LATTICE")
+            if lattice_button : row.prop(bpy.context.scene, "lattices", "", icon="LATTICE_DATA")
             if field_button : row.prop(bpy.context.scene, "fields", "",icon="FORCE_FORCE")
-            if metaball_button : row.prop(bpy.context.scene, "metaballs", "",icon="META_BALL")
+            if metaball_button : row.prop(bpy.context.scene, "metaballs", "", icon="META_BALL")
+
+            if context.scene.restrict_to_selected_objects:
+                row.active = False
+            else:
+                row.active = True
+            
+            row = layout.row(align=True)
+            if context.active_object is not None:
+                row.prop(bpy.context.scene, "restrict_to_selected_objects", "", icon="BORDER_RECT")
 
 # Preferences
 
@@ -296,12 +344,12 @@ class SelectivityPreferences(AddonPreferences):
         row.prop(self, "mesh_button", icon='MESH_DATA', text='')
         row.prop(self, "light_button", icon='LAMP', text='')
         row.prop(self, "camera_button", icon="OUTLINER_DATA_CAMERA", text='')
-        row.prop(self, "empty_button", icon="OUTLINER_OB_EMPTY", text='')
+        row.prop(self, "empty_button", icon="OUTLINER_DATA_EMPTY", text='')
         row.prop(self, "curve_button", icon="CURVE_DATA", text='')
-        row.prop(self, "armature_button", icon="BONE_DATA", text='')
+        row.prop(self, "armature_button", icon="ARMATURE_DATA", text='')
         row.prop(self, "surface_button", icon="SURFACE_DATA", text='')
         row.prop(self, "text_button", icon="FONT_DATA", text='')
-        row.prop(self, "lattice_button", icon="OUTLINER_OB_LATTICE", text='')
+        row.prop(self, "lattice_button", icon="LATTICE_DATA", text='')
         row.prop(self, "field_button", icon="FORCE_FORCE", text='')
         row.prop(self, "metaball_button", icon="META_BALL", text='')
         row.separator()
