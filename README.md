@@ -24,6 +24,9 @@ By default, objects whose types are not displayed are still selectable. You can 
 #### Lights
 If some emissive objects are part of your lighting setup, you can count them as light. If only some of them are lights while the others are just objects, you can filter them by adding a prefix to their name (i.e. : light_)
 
+#### Selected objects only
+The last icon turns everything unselectable but your current selection of objects.
+
 ---
 ###Contact :
 Alesis : sidenkoai@gmail.com  
