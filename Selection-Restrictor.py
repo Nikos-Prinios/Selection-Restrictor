@@ -18,7 +18,7 @@
 
 bl_info = {
 	"name": "Selection-Restrictor",
-	"author": "Alesis & Nikos",
+	"author": "Alesis, loochmunz & Nikos",
 	"version": (1,5),
 	"blender": (2, 7, 8, 0),
 	"api": 44539,
