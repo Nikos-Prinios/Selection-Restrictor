@@ -30,5 +30,5 @@ The last icon turns everything unselectable but your current selection of object
 ---
 ###Contact :
 Alesis : sidenkoai@gmail.com  
-Nikos : nikos@easy-logging.net - @nikos_prinio
+Nikos : nikos@easy-logging.net - @nikos_prinio  
 Luciano :@loochmunz
