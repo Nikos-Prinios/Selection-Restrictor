@@ -1,7 +1,7 @@
 # Selection-Restrictor
 **This Blender add-on helps to restrict the selection of objects by type**  
 
-Selection-Restrictor (Alesis) and Selectivity (Nikos) have merged into a single project.
+Selection-Restrictor (Alesis) and Selectivity (Nikos) have merged into a single project. Luciano joined the team.
 
 ---
 
@@ -30,5 +30,5 @@ The last icon turns everything unselectable but your current selection of object
 ---
 ###Contact :
 Alesis : sidenkoai@gmail.com  
-Nikos : nikos@easy-logging.net
-
+Nikos : nikos@easy-logging.net - @nikos_prinio
+Luciano :@loochmunz
