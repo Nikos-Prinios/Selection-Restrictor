@@ -10,10 +10,9 @@ Selection-Restrictor (Alesis) and Selectivity (Nikos) have merged into a single 
 
 ### Usage
 
-You can activate the selection restrictor from the 3D viewport.
+You can activate the selection restrictor from the 3D viewport.  
 
-![Activate](/images/restrictor.jpg)
-![Viewport panel](/images/panel_.gif)  
+![Viewport panel](/images/panel.gif)  
 
 ### Preferences
 From the preferences you can compose your panel by picking the types of objects to display. This way, you can save some space and keep things tidy.
