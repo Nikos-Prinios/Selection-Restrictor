@@ -21,6 +21,9 @@ From the preferences you can compose your panel by picking the types of objects 
 
 By default, objects whose types are not displayed are still selectable. You can change this behavior by clicking on the funnel icon.
 
+#### Ctrl-click
+Control-click on a button will activate it and deactivate all the others. Or vice-versa. Depends.
+
 #### Lights
 If some emissive objects are part of your lighting setup, you can count them as light. If only some of them are lights while the others are just objects, you can filter them by adding a prefix to their name (i.e. : light_)
 
