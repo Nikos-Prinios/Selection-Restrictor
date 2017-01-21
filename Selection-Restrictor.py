@@ -18,7 +18,7 @@
 
 bl_info = {
 	"name": "Selection-Restrictor",
-	"author": "Alesis, loochmunz & Nikos",
+	"author": "Alesis & Nikos",
 	"version": (1,5),
 	"blender": (2, 7, 8, 0),
 	"api": 44539,
@@ -37,23 +37,142 @@ from bpy.types import Operator, AddonPreferences
 from bpy.props import BoolProperty, StringProperty
 from bpy.app.handlers import persistent
 global sel_restrictor
-global obj_num, selected_objects
+global obj_num, selected_objects, is_ctrl, last_prop_update, panic
 
+is_ctrl = False
 obj_num = 1
 restrict_to_selection = False
+invert_call = False
+panic = False
+
 
 @persistent
 def need_update(dummy):
     global obj_num
+    global last_prop_update
+    scene = bpy.context.scene
     objects = bpy.data.objects
     if objects.is_updated:
         if len(objects) != obj_num:
             obj_num = len(objects)
             update()
 
+def is_ctrl_pressed():
+    global is_ctrl
+    bpy.ops.object.ctrl_operator('INVOKE_DEFAULT')
+    if is_ctrl :
+        is_ctrl = False
+        return True
+    else:
+        is_ctrl = False
+        return False
+
 
 def prop_update(self,context):
     update()
+
+
+def swap(prop):
+    global panic
+    panic = True
+    s = bpy.context.scene
+    v = not getattr(s, prop)
+
+    attributes = 'meshes lights cameras nurbs lattices empties texts bones surfaces metaballs fields'.split(' ')
+    for attribute in attributes:
+        setattr(s, attribute, not v if prop == attribute else v)
+
+    panic = False
+    update()
+
+
+def prop_update_mesh(self,context):
+    global panic
+    if panic != True:
+        if is_ctrl_pressed():
+            swap('meshes')
+        else:
+            update()
+    
+
+def prop_update_light(self,context):
+    global panic
+    if panic != True:
+        if is_ctrl_pressed():
+            swap('lights')
+        else:
+            update()
+
+def prop_update_camera(self,context):
+    global panic
+    if panic != True:
+        if is_ctrl_pressed():
+            swap('cameras')
+        else:
+            update()
+def prop_update_bone(self,context):
+    global panic
+    if panic != True:
+        if is_ctrl_pressed():
+            swap('bones')
+        else:
+            update()
+def prop_update_lattice(self,context):
+    global panic
+    if panic != True:
+        if is_ctrl_pressed():
+            swap('lattices')
+        else:
+            update()
+
+def prop_update_empty(self,context):
+    global panic
+    if panic != True:
+        if is_ctrl_pressed():
+            swap('empties')
+        else:
+            update()
+
+def prop_update_nurb(self,context):
+    global panic
+    if panic != True:
+        if is_ctrl_pressed():
+            swap('nurbs')
+        else:
+            update()
+
+def prop_update_surface(self,context):
+    global panic
+    if panic != True:
+        if is_ctrl_pressed():
+            swap('surfaces')
+        else:
+            update()
+
+def prop_update_metaball(self,context):
+    global panic
+    if panic != True:
+        if is_ctrl_pressed():
+            swap('metaballs')
+        else:
+            update()
+
+def prop_update_text(self,context):
+    global panic
+    if panic != True:
+        if is_ctrl_pressed():
+            swap('texts')
+        else:
+            update()
+
+def prop_update_field(self,context):
+    global panic
+    if panic != True:
+        if is_ctrl_pressed():
+            swap('fields')
+        else:
+            update()
+
 
 def is_emissive(obj):
     try:
@@ -151,7 +270,6 @@ def update():
                 obj.hide_select = hidden_selectable
             if obj.type == 'META' and not metaball_button:
                 obj.hide_select = hidden_selectable
-
         
         if context.scene.restrict_to_selected_objects:
             initial_selection_read()
@@ -176,19 +294,18 @@ def restrict_to_selection(self,context):
     else:
         update()
 
-
 S = bpy.types.Scene        
-S.meshes = bpy.props.BoolProperty(name="Meshes", default = True, update = prop_update)
-S.nurbs = bpy.props.BoolProperty(name="Nurbs", default = True, update = prop_update)
-S.cameras = bpy.props.BoolProperty(name="Cameras", default = True, update = prop_update)
-S.lights = bpy.props.BoolProperty(name="Lights", default = True, update = prop_update)
-S.empties = bpy.props.BoolProperty(name="Empties", default = True,update = prop_update)
-S.bones = bpy.props.BoolProperty(name="Bones", default = True, update = prop_update)
-S.surfaces = bpy.props.BoolProperty(name="surfaces", default = True, update = prop_update)
-S.texts = bpy.props.BoolProperty(name="texts", default = True, update = prop_update)
-S.lattices = bpy.props.BoolProperty(name="lattices", default = True, update = prop_update)
-S.fields = bpy.props.BoolProperty(name="fields", default = True, update = prop_update)
-S.metaballs = bpy.props.BoolProperty(name="metaballs", default = True, update = prop_update)
+S.meshes = bpy.props.BoolProperty(name="Meshes", default = True, update = prop_update_mesh)
+S.nurbs = bpy.props.BoolProperty(name="Nurbs", default = True, update = prop_update_nurb)
+S.cameras = bpy.props.BoolProperty(name="Cameras", default = True, update = prop_update_camera)
+S.lights = bpy.props.BoolProperty(name="Lights", default = True, update = prop_update_light)
+S.empties = bpy.props.BoolProperty(name="Empties", default = True,update = prop_update_empty)
+S.bones = bpy.props.BoolProperty(name="Bones", default = True, update = prop_update_bone)
+S.surfaces = bpy.props.BoolProperty(name="surfaces", default = True, update = prop_update_surface)
+S.texts = bpy.props.BoolProperty(name="texts", default = True, update = prop_update_text)
+S.lattices = bpy.props.BoolProperty(name="lattices", default = True, update = prop_update_lattice)
+S.fields = bpy.props.BoolProperty(name="fields", default = True, update = prop_update_field)
+S.metaballs = bpy.props.BoolProperty(name="metaballs", default = True, update = prop_update_metaball)
 S.restrict_to_selected_objects = bpy.props.BoolProperty(name="restrict_to_selected_objects", default = False, update = restrict_to_selection)
 bpy.types.Object.init = bpy.props.BoolProperty(name="init",description="Initial state",default = False)
 
@@ -201,6 +318,20 @@ def initial_read():
 def initial_write():
     for obj in bpy.context.scene.objects:
         obj.hide_select = obj.init
+
+
+# Detect ctrl
+
+class ctrl_key_operator(bpy.types.Operator):
+    """Ctrl key"""
+    bl_idname = "object.ctrl_operator"
+    bl_label = "Ctrl Key Op"
+
+    def invoke(self, context, event):
+        global is_ctrl
+        if event.ctrl:
+            is_ctrl = True
+        return {'FINISHED'}
 
 
 class selective_panel(Header):
@@ -278,63 +409,20 @@ class OBJECT_OT_activate(bpy.types.Operator):
 
 class SelectivityPreferences(AddonPreferences):
     bl_idname = __name__
-
-    mesh_button = BoolProperty(
-            name="mesh button",
-            default=True, 
-            )
-    light_button = BoolProperty(
-            name="light button",
-            default=True,
-            )
-    camera_button = BoolProperty(
-            name="camera button",
-            default=True,
-            )
-    empty_button = BoolProperty(
-            name="empty button",
-            default=True,
-            )
-    curve_button = BoolProperty(
-            name="curve button",
-            default=True,
-            )
-    armature_button = BoolProperty(
-            name="armature button",
-            default=True,
-            )
-    surface_button = BoolProperty(
-            name="surface button",
-            default=True,
-            )
-    text_button = BoolProperty(
-            name="text button",
-            default=False,
-            )
-    lattice_button = BoolProperty(
-            name="lattice button",
-            default=False,
-            )
-    field_button = BoolProperty(
-            name="field button",
-            default=False,
-            )
-    metaball_button = BoolProperty(
-            name="metaball button",
-            default=False,
-            )
-
-    emissive_as_light = BoolProperty(
-            name="other light",
-            default=False,
-            )
-    start_with = StringProperty(
-            name="begins with:",
-            )
-    hidden_selectable = BoolProperty(
-            name="hidden selectable",
-            default=False,
-            )
+    mesh_button = BoolProperty(name="mesh button", default=True,)
+    light_button = BoolProperty(name="light button", default=True,)
+    camera_button = BoolProperty(name="camera button", default=True,)
+    empty_button = BoolProperty(name="empty button", default=True,)
+    curve_button = BoolProperty(name="curve button", default=True,)
+    armature_button = BoolProperty(name="armature button", default=True,)
+    surface_button = BoolProperty(name="surface button", default=True,)
+    text_button = BoolProperty(name="text button", default=False,)
+    lattice_button = BoolProperty(name="lattice button", default=False,)
+    field_button = BoolProperty(name="field button",default=False,)
+    metaball_button = BoolProperty(name="metaball button", default=False,)
+    emissive_as_light = BoolProperty(name="other light", default=False,)
+    start_with = StringProperty(name="begins with:",)
+    hidden_selectable = BoolProperty(name="hidden selectable", default=False,)
 
     def draw(self, context):
         layout = self.layout
@@ -387,10 +475,13 @@ def register():
     bpy.utils.register_module(__name__)
     bpy.app.handlers.scene_update_post.clear()
     bpy.app.handlers.scene_update_post.append(need_update)
+    #bpy.utils.register_class(ctrl_key_operator)
+
 
 def unregister():
     bpy.utils.unregister_module(__name__)
     bpy.app.handlers.scene_update_post.remove(need_update)
+    #bpy.utils.unregister_class(ctrl_key_operator)
 
 if __name__ == "__main__":
     register()
