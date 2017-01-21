@@ -18,7 +18,7 @@
 
 bl_info = {
 	"name": "Selection-Restrictor",
-	"author": "Alesis & Nikos",
+	"author": "Alesis, Luciano & Nikos",
 	"version": (1,5),
 	"blender": (2, 7, 8, 0),
 	"api": 44539,
@@ -37,7 +37,7 @@ from bpy.types import Operator, AddonPreferences
 from bpy.props import BoolProperty, StringProperty
 from bpy.app.handlers import persistent
 global sel_restrictor
-global obj_num, selected_objects, is_ctrl, last_prop_update, panic
+global obj_num, selected_objects, is_ctrl, panic
 
 is_ctrl = False
 obj_num = 1
@@ -49,13 +49,13 @@ panic = False
 @persistent
 def need_update(dummy):
     global obj_num
-    global last_prop_update
     scene = bpy.context.scene
     objects = bpy.data.objects
     if objects.is_updated:
         if len(objects) != obj_num:
             obj_num = len(objects)
             update()
+
 
 def is_ctrl_pressed():
     global is_ctrl
@@ -77,101 +77,22 @@ def swap(prop):
     panic = True
     s = bpy.context.scene
     v = not getattr(s, prop)
-
     attributes = 'meshes lights cameras nurbs lattices empties texts bones surfaces metaballs fields'.split(' ')
     for attribute in attributes:
         setattr(s, attribute, not v if prop == attribute else v)
-
     panic = False
     update()
 
 
-def prop_update_mesh(self,context):
-    global panic
-    if panic != True:
-        if is_ctrl_pressed():
-            swap('meshes')
-        else:
-            update()
-    
-
-def prop_update_light(self,context):
-    global panic
-    if panic != True:
-        if is_ctrl_pressed():
-            swap('lights')
-        else:
-            update()
-
-def prop_update_camera(self,context):
-    global panic
-    if panic != True:
-        if is_ctrl_pressed():
-            swap('cameras')
-        else:
-            update()
-def prop_update_bone(self,context):
-    global panic
-    if panic != True:
-        if is_ctrl_pressed():
-            swap('bones')
-        else:
-            update()
-def prop_update_lattice(self,context):
-    global panic
-    if panic != True:
-        if is_ctrl_pressed():
-            swap('lattices')
-        else:
-            update()
-
-def prop_update_empty(self,context):
-    global panic
-    if panic != True:
-        if is_ctrl_pressed():
-            swap('empties')
-        else:
-            update()
-
-def prop_update_nurb(self,context):
-    global panic
-    if panic != True:
-        if is_ctrl_pressed():
-            swap('nurbs')
-        else:
-            update()
-
-def prop_update_surface(self,context):
-    global panic
-    if panic != True:
-        if is_ctrl_pressed():
-            swap('surfaces')
-        else:
-            update()
-
-def prop_update_metaball(self,context):
-    global panic
-    if panic != True:
-        if is_ctrl_pressed():
-            swap('metaballs')
-        else:
-            update()
-
-def prop_update_text(self,context):
-    global panic
-    if panic != True:
-        if is_ctrl_pressed():
-            swap('texts')
-        else:
-            update()
-
-def prop_update_field(self,context):
-    global panic
-    if panic != True:
-        if is_ctrl_pressed():
-            swap('fields')
-        else:
-            update()
+def create_update_func(prop):
+    def self_update(self, context):
+        global panic
+        if panic != True:
+            if is_ctrl_pressed():
+                swap(prop)
+            else:
+                update()
+    return self_update
 
 
 def is_emissive(obj):
@@ -183,12 +104,14 @@ def is_emissive(obj):
     except:
         return False
 
+
 def initial_selection_read():
     global selected_objects
     selected_objects = []
     for obj in bpy.context.scene.objects:
         if obj.select:
             selected_objects.append(obj)
+
 
 def initial_selection_write():
     global selected_objects
@@ -202,84 +125,56 @@ def initial_selection_write():
 
 def update():
     global sel_restrictor
+    context = bpy.context
+    scene = context.scene
+    p = bpy.context.user_preferences.addons[__name__].preferences
     emissive_as_light = bpy.context.user_preferences.addons[__name__].preferences.emissive_as_light
     hidden_selectable = bpy.context.user_preferences.addons[__name__].preferences.hidden_selectable
     start_with = bpy.context.user_preferences.addons[__name__].preferences.start_with
-    mesh_button = bpy.context.user_preferences.addons[__name__].preferences.mesh_button
-    camera_button = bpy.context.user_preferences.addons[__name__].preferences.camera_button
-    light_button = bpy.context.user_preferences.addons[__name__].preferences.light_button
-    empty_button = bpy.context.user_preferences.addons[__name__].preferences.empty_button
-    curve_button = bpy.context.user_preferences.addons[__name__].preferences.curve_button
-    armature_button = bpy.context.user_preferences.addons[__name__].preferences.armature_button
-    surface_button = bpy.context.user_preferences.addons[__name__].preferences.surface_button
-    text_button = bpy.context.user_preferences.addons[__name__].preferences.text_button
-    lattice_button = bpy.context.user_preferences.addons[__name__].preferences.lattice_button
-    field_button = bpy.context.user_preferences.addons[__name__].preferences.field_button
-    metaball_button = bpy.context.user_preferences.addons[__name__].preferences.metaball_button
+    types = 'LAMP CAMERA CURVE LATTICE EMPTY FONT ARMATURE SURFACE META'.split(' ')
+    props = 'lights cameras nurbs lattices empties texts bones surfaces metaballs'.split(' ')
 
-    context = bpy.context
     if sel_restrictor:
-        for obj in bpy.context.scene.objects:
+        
+        # PANEL
+        for obj in scene.objects: 
+            # MESHES
             if obj.type == 'MESH':
                 if emissive_as_light and is_emissive(obj) and obj.name.startswith(start_with):
-                    obj.hide_select = not context.scene.lights  
-                    print(obj.name)  
+                    obj.hide_select = not scene.lights  
                 else:
-                    obj.hide_select = not context.scene.meshes
-            if obj.type == 'CAMERA':
-                obj.hide_select = not context.scene.cameras
-            if obj.type == 'LAMP':
-                obj.hide_select = not context.scene.lights
-            if obj.type == 'EMPTY':
-                obj.hide_select = not context.scene.empties
-            if obj.type == 'CURVE':
-                obj.hide_select = not context.scene.nurbs
-            if obj.type == 'ARMATURE' :
-                obj.hide_select = not context.scene.bones
-            if obj.type == 'SURFACE' :
-                obj.hide_select = not context.scene.surfaces
-            if obj.type == 'FONT' :
-                obj.hide_select = not context.scene.texts
-            if obj.type == 'LATTICE' :
-                obj.hide_select = not context.scene.lattices
-            if obj.field.type != 'NONE' :
-                obj.hide_select = not context.scene.fields
-            if obj.type == 'META' :
-                obj.hide_select = not context.scene.metaballs
-
-        for obj in bpy.context.scene.objects:
-            if obj.type == 'MESH' and not mesh_button:
-                obj.hide_select = hidden_selectable
-            if obj.type == 'CAMERA' and not camera_button:
-                obj.hide_select = hidden_selectable
-            if obj.type == 'LAMP' and not light_button:
-                obj.hide_select = hidden_selectable
-            if obj.type == 'EMPTY' and not empty_button:
-                obj.hide_select = hidden_selectable
-            if obj.type == 'CURVE' and not curve_button:
-                obj.hide_select = hidden_selectable
-            if obj.type == 'ARMATURE' and not armature_button:
-                obj.hide_select = hidden_selectable
-            if obj.type == 'SURFACE' and not surface_button:
-                obj.hide_select = hidden_selectable
-            if obj.type == 'FONT' and not text_button:
-                obj.hide_select = hidden_selectable
-            if obj.type == 'LATTICE' and not lattice_button:
-                obj.hide_select = hidden_selectable
-            if obj.field.type != 'NONE' and not field_button:
-                obj.hide_select = hidden_selectable
-            if obj.type == 'META' and not metaball_button:
-                obj.hide_select = hidden_selectable
+                    obj.hide_select = not scene.meshes
+            # FIELDS
+            elif obj.field.type != 'NONE':
+                    obj.hide_select = not scene.fields
+            # OTHERS
+            else:
+                for i, typo in enumerate(types):
+                    if obj.type == typo:
+                        obj.hide_select = not getattr(scene, props[i])
         
-        if context.scene.restrict_to_selected_objects:
+        # PREFERENCES --> HIDDEN        
+        types = 'MESH LAMP CAMERA CURVE LATTICE EMPTY FONT ARMATURE SURFACE META'.split(' ')
+        buttons = 'mesh_button light_button camera_button curve_button lattice_button empty_button text_button armature_button surface_button metaball_button'.split(' ')
+
+        for obj in scene.objects:
+            for i, typo in enumerate(types): 
+                if obj.type == typo and not getattr (p,buttons[i]):
+                    obj.hide_select = hidden_selectable
+                if obj.field.type != 'NONE' and not p.field_button:
+                    obj.hide_select = hidden_selectable
+        
+        # SELECTION ONLY
+        if scene.restrict_to_selected_objects:
             initial_selection_read()
-            for obj in context.scene.objects:
+            for obj in scene.objects:
                 if not obj.select:
                     obj.hide_select = True
                 else:
                     obj.hide_select = False
 
-        for obj in bpy.context.scene.objects:        
+        # DESELECT THE UNSELECTABLES
+        for obj in scene.objects:        
                 if obj.select and obj.hide_select :
                     obj.select = False
  
@@ -295,17 +190,17 @@ def restrict_to_selection(self,context):
         update()
 
 S = bpy.types.Scene        
-S.meshes = bpy.props.BoolProperty(name="Meshes", default = True, update = prop_update_mesh)
-S.nurbs = bpy.props.BoolProperty(name="Nurbs", default = True, update = prop_update_nurb)
-S.cameras = bpy.props.BoolProperty(name="Cameras", default = True, update = prop_update_camera)
-S.lights = bpy.props.BoolProperty(name="Lights", default = True, update = prop_update_light)
-S.empties = bpy.props.BoolProperty(name="Empties", default = True,update = prop_update_empty)
-S.bones = bpy.props.BoolProperty(name="Bones", default = True, update = prop_update_bone)
-S.surfaces = bpy.props.BoolProperty(name="surfaces", default = True, update = prop_update_surface)
-S.texts = bpy.props.BoolProperty(name="texts", default = True, update = prop_update_text)
-S.lattices = bpy.props.BoolProperty(name="lattices", default = True, update = prop_update_lattice)
-S.fields = bpy.props.BoolProperty(name="fields", default = True, update = prop_update_field)
-S.metaballs = bpy.props.BoolProperty(name="metaballs", default = True, update = prop_update_metaball)
+S.meshes = bpy.props.BoolProperty(name="Meshes", default = True, update =create_update_func("meshes"))
+S.nurbs = bpy.props.BoolProperty(name="Nurbs", default = True, update =create_update_func("nurbs"))
+S.cameras = bpy.props.BoolProperty(name="Cameras", default = True, update =create_update_func("cameras"))
+S.lights = bpy.props.BoolProperty(name="Lights", default = True, update =create_update_func("lights"))
+S.empties = bpy.props.BoolProperty(name="Empties", default = True,update =create_update_func("empties"))
+S.bones = bpy.props.BoolProperty(name="Bones", default = True, update =create_update_func("bones"))
+S.surfaces = bpy.props.BoolProperty(name="surfaces", default = True, update =create_update_func("surfaces"))
+S.texts = bpy.props.BoolProperty(name="texts", default = True, update =create_update_func("texts"))
+S.lattices = bpy.props.BoolProperty(name="lattices", default = True, update =create_update_func("lattices"))
+S.fields = bpy.props.BoolProperty(name="fields", default = True, update =create_update_func("fields"))
+S.metaballs = bpy.props.BoolProperty(name="metaballs", default = True, update =create_update_func("metaballs"))
 S.restrict_to_selected_objects = bpy.props.BoolProperty(name="restrict_to_selected_objects", default = False, update = restrict_to_selection)
 bpy.types.Object.init = bpy.props.BoolProperty(name="init",description="Initial state",default = False)
 
@@ -315,12 +210,11 @@ def initial_read():
     for obj in bpy.context.scene.objects:
         obj.init = obj.hide_select
 
+
 def initial_write():
     for obj in bpy.context.scene.objects:
         obj.hide_select = obj.init
 
-
-# Detect ctrl
 
 class ctrl_key_operator(bpy.types.Operator):
     """Ctrl key"""
@@ -347,19 +241,8 @@ class selective_panel(Header):
 
     def draw(self, context):
         layout = self.layout
+        p = bpy.context.user_preferences.addons[__name__].preferences
         global sel_restrictor, empties, lights, bones, cameras, meshes, nurbs
-
-        mesh_button = bpy.context.user_preferences.addons[__name__].preferences.mesh_button
-        light_button = bpy.context.user_preferences.addons[__name__].preferences.light_button
-        camera_button = bpy.context.user_preferences.addons[__name__].preferences.camera_button
-        empty_button = bpy.context.user_preferences.addons[__name__].preferences.empty_button
-        curve_button = bpy.context.user_preferences.addons[__name__].preferences.curve_button
-        armature_button = bpy.context.user_preferences.addons[__name__].preferences.armature_button
-        surface_button = bpy.context.user_preferences.addons[__name__].preferences.surface_button
-        text_button = bpy.context.user_preferences.addons[__name__].preferences.text_button
-        lattice_button = bpy.context.user_preferences.addons[__name__].preferences.lattice_button
-        field_button = bpy.context.user_preferences.addons[__name__].preferences.field_button
-        metaball_button = bpy.context.user_preferences.addons[__name__].preferences.metaball_button
 
         if not sel_restrictor :
             row = layout.row()
@@ -369,17 +252,17 @@ class selective_panel(Header):
             row = layout.row(align=True)
             row.separator()
             row.operator("objects.activate", icon='TRIA_DOWN', text='')
-            if mesh_button : row.prop(bpy.context.scene,"meshes", "", icon='MESH_DATA')
-            if light_button : row.prop(bpy.context.scene,"lights", "", icon='LAMP_DATA')
-            if camera_button : row.prop(bpy.context.scene,"cameras", "", icon='OUTLINER_DATA_CAMERA')
-            if empty_button : row.prop(bpy.context.scene,"empties", "", icon='OUTLINER_DATA_EMPTY')
-            if curve_button : row.prop(bpy.context.scene,"nurbs", "", icon='CURVE_DATA')
-            if armature_button : row.prop(bpy.context.scene,"bones", "", icon='ARMATURE_DATA')
-            if surface_button : row.prop(bpy.context.scene, "surfaces", "", icon="SURFACE_DATA")
-            if text_button : row.prop(bpy.context.scene, "texts", "",icon="FONT_DATA")
-            if lattice_button : row.prop(bpy.context.scene, "lattices", "", icon="LATTICE_DATA")
-            if field_button : row.prop(bpy.context.scene, "fields", "",icon="FORCE_FORCE")
-            if metaball_button : row.prop(bpy.context.scene, "metaballs", "", icon="META_BALL")
+            if p.mesh_button : row.prop(bpy.context.scene,"meshes", "", icon='MESH_DATA')
+            if p.light_button : row.prop(bpy.context.scene,"lights", "", icon='LAMP_DATA')
+            if p.camera_button : row.prop(bpy.context.scene,"cameras", "", icon='OUTLINER_DATA_CAMERA')
+            if p.empty_button : row.prop(bpy.context.scene,"empties", "", icon='OUTLINER_DATA_EMPTY')
+            if p.curve_button : row.prop(bpy.context.scene,"nurbs", "", icon='CURVE_DATA')
+            if p.armature_button : row.prop(bpy.context.scene,"bones", "", icon='ARMATURE_DATA')
+            if p.surface_button : row.prop(bpy.context.scene, "surfaces", "", icon="SURFACE_DATA")
+            if p.text_button : row.prop(bpy.context.scene, "texts", "",icon="FONT_DATA")
+            if p.lattice_button : row.prop(bpy.context.scene, "lattices", "", icon="LATTICE_DATA")
+            if p.field_button : row.prop(bpy.context.scene, "fields", "",icon="FORCE_FORCE")
+            if p.metaball_button : row.prop(bpy.context.scene, "metaballs", "", icon="META_BALL")
 
             if context.scene.restrict_to_selected_objects:
                 row.active = False
@@ -390,15 +273,13 @@ class selective_panel(Header):
             if context.active_object is not None:
                 row.prop(bpy.context.scene, "restrict_to_selected_objects", "", icon="BORDER_RECT")
 
-# Preferences
-
+# PREFERENCES
 class OBJECT_OT_activate(bpy.types.Operator):
     bl_idname = "objects.activate"
     bl_label = "Activate Selective"
  
     def execute(self, context):
         global sel_restrictor
-        
         sel_restrictor = not sel_restrictor
         if sel_restrictor:
             initial_read()
@@ -447,7 +328,6 @@ class SelectivityPreferences(AddonPreferences):
             row.label("Not displayed types are not selectable")
         else:
             row.label("Not displayed types are selectable")
-        
         row = layout.row(align=True)
         row.prop(self, "emissive_as_light", icon='LAMP_AREA', text='Emissive objects count as light')
         row.prop(self, "start_with", text='if start with:')
@@ -462,26 +342,21 @@ class OBJECT_OT_addon_prefs(Operator):
     def execute(self, context):
         user_preferences = context.user_preferences
         addon_prefs = user_preferences.addons[__name__].preferences
-
         info = ("Mesh: %r, Light: %r, Camera: %r, Empty: %r, Curve: %r, Armature: %r, Surface: %r, Text: %r, Lattice: %r, Field: %r, Metaball: %r, " %
                 (addon_prefs.mesh_button, addon_prefs.light_button, addon_prefs.camera_button, addon_prefs.empty_button, addon_prefs.curve_button, addon_prefs.armature_button, addon_prefs.surface_button, addon_prefs.text_button, addon_prefs.lattice_button, addon_prefs.field_button, addon_prefs.metaball_button))
-
         self.report({'INFO'}, info)
-        print(info)
-
         return {'FINISHED'}
   
 def register():
     bpy.utils.register_module(__name__)
     bpy.app.handlers.scene_update_post.clear()
     bpy.app.handlers.scene_update_post.append(need_update)
-    #bpy.utils.register_class(ctrl_key_operator)
 
 
 def unregister():
     bpy.utils.unregister_module(__name__)
     bpy.app.handlers.scene_update_post.remove(need_update)
-    #bpy.utils.unregister_class(ctrl_key_operator)
+
 
 if __name__ == "__main__":
     register()
